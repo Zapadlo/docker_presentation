@@ -21,7 +21,7 @@
 
 class: center, middle
 
-# Docker
+# Containers
 
 ![dockerdevil](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFSQbmdcdS4oZ9r8mm4bqbHwo5vU17ftTN0VtjqoR81cel9c0sdg)
 
@@ -30,9 +30,10 @@ class: center, middle
 # Why?
 
  - Developers like it
- - clear divorce of build/deploy
+ - Clear divorce of build/deploy
  - Unified way to deploy apps
- - logical isolation in seconds
+ - Logical isolation in seconds
+
 ---
 
 # Shit we use to get there!
@@ -59,12 +60,78 @@ And a little bit of:
 
 ---
 
+# Docker file
+
+Example dropwizard service
+
+```bash
+FROM coco/javabase
+
+RUN git clone http://git.svc.ft.com/scm/cp/wordpress-article-transformer.git
+RUN cd wordpress-article-transformer && mvn install
+RUN cp /wordpress-article-transformer/target/wordpress-article-transformer-0.0.1-SNAPSHOT.jar /app.jar
+
+ADD credentials.properties /
+ADD config.yaml /
+
+CMD java -jar app.jar server config.yaml
+``` 
+
+---
+
+# Service file
+
+```bash
+[Unit]
+Description=Wordpress Transformer
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=300
+ExecStartPre=-/usr/bin/docker kill %p-%i
+ExecStartPre=-/usr/bin/docker rm %p-%i
+ExecStartPre=/usr/bin/docker pull coco/wp-transformer
+ExecStart=/usr/bin/docker run --rm --name %p-%i -p 8080 -p 8081 coco/wp-transformer
+ExecStop=/usr/bin/docker stop -t 3 %p-%i
+
+[X-Fleet]
+Conflicts=%p@*.service
+```
+
+---
+
 # Updating/Host patching
+
+```yaml
+update:
+    reboot-strategy: best-effort
+```
 
 ---
 
 # Splunk intergration
 
+```bash
+...
+ExecStart=/bin/bash -c "\
+  export SPLUNK_IP=$(/usr/bin/etcdctl get /ft/splunk_host); \
+  /usr/bin/journalctl -a -f --output=json | ncat $SPLUNK_IP 514"
+...
+```
+
+---
+
+# Host + Container metrics
+
+```bash
+...
+ExecStart=/usr/bin/docker run --rm --volume=/:/rootfs:ro 
+  --volume=/var/run:/var/run:rw 
+  --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro 
+  --publish=8081:8080 --name=cadvisor google/cadvisor:latest
+...
+```
 ---
 
 # Links:
@@ -72,6 +139,7 @@ And a little bit of:
  - [CoreOS](https://coreos.com/)
  - [Fleet](https://github.com/coreos/fleet)
  - [etcd](https://github.com/coreos/etcd)
+ - [Dockerfiles](http://docs.docker.com/reference/builder/)
  - [SystemD](http://freedesktop.org/wiki/Software/systemd/)
  - [JournalD](http://www.freedesktop.org/software/systemd/man/systemd-journald.service.html)
  - [vulcan](http://vulcand.io/)
