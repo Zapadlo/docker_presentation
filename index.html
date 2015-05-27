@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Title</title>
+    <title>Containers-pres</title>
     <meta charset="utf-8">
     <style>
       @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
@@ -94,6 +94,8 @@ ExecStartPre=-/usr/bin/docker rm %p-%i
 ExecStartPre=/usr/bin/docker pull coco/wp-transformer
 ExecStart=/usr/bin/docker run --rm --name %p-%i -p 8080 -p 8081 coco/wp-transformer
 ExecStop=/usr/bin/docker stop -t 3 %p-%i
+Restart=on-failure
+RestartSec=60
 
 [X-Fleet]
 Conflicts=%p@*.service
@@ -101,16 +103,17 @@ Conflicts=%p@*.service
 
 ---
 
-# Updating/Host patching
+# Fleetctl
 
-```yaml
-update:
-    reboot-strategy: best-effort
+```bash
+fleetctl start wp-transformer@1.service
 ```
 
 ---
 
 # Splunk intergration
+
+A Service file which does:
 
 ```bash
 ...
@@ -119,11 +122,13 @@ ExecStart=/bin/bash -c "\
   /usr/bin/journalctl -a -f --output=json | ncat $SPLUNK_IP 514"
 ...
 ```
+[Splunk](http://ec2-52-17-39-186.eu-west-1.compute.amazonaws.com:8000/en-US/app/search/search?q=search%20source%3D%22tcp%3A514%22&earliest=&latest=&sid=1432734408.7)
 
 ---
 
 # Host + Container metrics
 
+A docker container:
 ```bash
 ...
 ExecStart=/usr/bin/docker run --rm --volume=/:/rootfs:ro 
@@ -132,6 +137,66 @@ ExecStart=/usr/bin/docker run --rm --volume=/:/rootfs:ro
   --publish=8081:8080 --name=cadvisor google/cadvisor:latest
 ...
 ```
+
+[Cadvisor](http://ec2-52-17-39-186.eu-west-1.compute.amazonaws.com:8081/containers/)
+
+---
+
+# SkyDNS
+
+Service:
+```bash
+docker run --rm --net=host -e SKYDNS_NAMESERVERS='172.31.0.2:53' 
+  -e SKYDNS_ADDR=$DOCKER_IP:53 -e ETCD_MACHINES='http://127.0.0.1:4001' 
+  --name %p skynetservices/skydns"
+```
+
+Sidekicks:
+```bash
+export HOST_IP=$(/usr/bin/ifconfig eth0 | sed -n '2 p' | awk '{print $2}' | cut -d':' -f2); \
+  export HOST_NAME=$(echo $HOSTNAME | cut -d '.' -f1); \
+  while true; do \
+    etcdctl set /skydns/local/skydns/cadvisor/$HOST_NAME 
+    \"{\\\"host\\\":\\\"$HOST_IP\\\",\\\"port\\\":8081}\" --ttl 60; \
+    sleep 45; \
+  done"
+```
+
+---
+
+# Prometheus
+
+[Prometheus](http://54.77.7.111:9090/)
+
+```
+sum(rate(container_cpu_usage_seconds_total{name="cadvisor"}[2m]) * 100) by (name, instance)
+```
+
+---
+
+# PromDash
+
+[PromDash](http://54.77.7.111:3000/test1)
+
+---
+
+# The big TODO
+
+ - Deployments (scheduler service)
+ - docker image rebuilding
+ - docker repo
+ - VM scaling strategy
+ - docs
+ - unhacking things
+ - "environments"
+ - **actual** monitoring
+ - training
+ - migration
+ - testing, lots of testing
+ - ...
+ - ..
+ - .
+
 ---
 
 # Links:
