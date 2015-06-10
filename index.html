@@ -21,43 +21,42 @@
 
 class: center, middle
 
-# Containers
-
-![dockerdevil](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFSQbmdcdS4oZ9r8mm4bqbHwo5vU17ftTN0VtjqoR81cel9c0sdg)
+# Containerisation Demo to UP teams
 
 ---
 
-# Why?
+# Intro
 
- - Developers like it
- - Clear divorce of build/deploy
- - Unified way to deploy apps
- - Logical isolation in seconds
-
----
-
-# Shit we use to get there!
-
- - CoreOS 
-   * fleet
-   * etcd
-   * docker
- - SystemD
- - JournalD
- - Vulcan
-
-And a little bit of:
-
- - Sky dns
- - Good ol' Bash
- - Golang services
- - Cadvisor
- - Prometheus
+ - Background
+ - Docker refresher
+ - Coreos refresher
 
 ---
 
-# What it looks like?
+# The Cluster
 
+ - fleetctl list-units
+ - look at some logs
+ - look at some logs
+ - ssh to a node. ps -ef, etc.
+
+---
+
+# End to End publication
+
+ - show healthcheck endpoints
+ - mention NOT externally accessible at the moment
+ - force ingest content uuid (wordpress?) via curl and see it from the api-policy-component (demo owlim persist)
+ - force ingest content uuid (wordpress?) via curl and see it from the document-store-api (demo mongo persist) 
+
+ - publish 
+ ```
+ curl -i   -H "Content-Type : application/json" -H "Host: ingester-content" -H "X-Request-Id: bodor001" -X POST -d '{ "contentUri" : "http://whatever/content/f1332fc0-0f54-11e5-897e-00144feabdc0", "destination" : "methode-article-transformer", "relativeUrl" : "content/f1332fc0-0f54-11e5-897e-00144feabdc0"}' localhost:8080/ingest/
+ ```
+ - verify:
+ ```
+ curl -H "Host: document-store-api" -H "Content-Type : application/json" -X GET localhost:8080/content/f1332fc0-0f54-11e5-897e-00144feabdc0
+ ```
 ---
 
 # Docker file
