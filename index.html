@@ -50,167 +50,73 @@ class: center, middle
  - force ingest content uuid (wordpress?) via curl and see it from the document-store-api (demo mongo persist) 
 
  - publish 
- ```
+ ```bash
  curl -i   -H "Content-Type : application/json" -H "Host: ingester-content" -H "X-Request-Id: bodor001" -X POST -d '{ "contentUri" : "http://whatever/content/f1332fc0-0f54-11e5-897e-00144feabdc0", "destination" : "methode-article-transformer", "relativeUrl" : "content/f1332fc0-0f54-11e5-897e-00144feabdc0"}' localhost:8080/ingest/
  ```
  - verify:
- ```
+ ```bash
  curl -H "Host: document-store-api" -H "Content-Type : application/json" -X GET localhost:8080/content/f1332fc0-0f54-11e5-897e-00144feabdc0
  ```
----
-
-# Docker file
-
-Example dropwizard service
-
-```bash
-FROM coco/javabase
-
-RUN git clone http://git.svc.ft.com/scm/cp/wordpress-article-transformer.git
-RUN cd wordpress-article-transformer && mvn install
-RUN cp /wordpress-article-transformer/target/wordpress-article-transformer-0.0.1-SNAPSHOT.jar /app.jar
-
-ADD credentials.properties /
-ADD config.yaml /
-
-CMD java -jar app.jar server config.yaml
-``` 
+ - talk about Vulcan (show sidekick service)
 
 ---
 
-# Service file
+# Operating a service in the cluster
 
-```bash
-[Unit]
-Description=Wordpress Transformer
-After=docker.service
-Requires=docker.service
-
-[Service]
-TimeoutStartSec=300
-ExecStartPre=-/usr/bin/docker kill %p-%i
-ExecStartPre=-/usr/bin/docker rm %p-%i
-ExecStartPre=/usr/bin/docker pull coco/wp-transformer
-ExecStart=/usr/bin/docker run --rm --name %p-%i -p 8080 -p 8081 coco/wp-transformer
-ExecStop=/usr/bin/docker stop -t 3 %p-%i
-Restart=on-failure
-RestartSec=60
-
-[X-Fleet]
-Conflicts=%p@*.service
-```
+ - fleetctl stop/destroy/start xxx.service
+ - show a request not working.
 
 ---
 
-# Fleetctl
+# Logging & Monitoring
 
-```bash
-fleetctl start wp-transformer@1.service
-```
-
----
-
-# Splunk intergration
-
-A Service file which does:
-
-```bash
-...
-ExecStart=/bin/bash -c "\
-  export SPLUNK_IP=$(/usr/bin/etcdctl get /ft/splunk_host); \
-  /usr/bin/journalctl -a -f --output=json | ncat $SPLUNK_IP 514"
-...
-```
-[Splunk](http://ec2-52-17-39-186.eu-west-1.compute.amazonaws.com:8000/en-US/app/search/search?q=search%20source%3D%22tcp%3A514%22&earliest=&latest=&sid=1432734408.7)
+ - show logging in cluster splunk
+ - show logging on server
+ - show accessing docker container
+ - monitoring prometheus port XXXX
+ - graphing http://graphite.ft.com/
 
 ---
 
-# Host + Container metrics
+# Security
 
-A docker container:
-```bash
-...
-ExecStart=/usr/bin/docker run --rm --volume=/:/rootfs:ro 
-  --volume=/var/run:/var/run:rw 
-  --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro 
-  --publish=8081:8080 --name=cadvisor google/cadvisor:latest
-...
-```
-
-[Cadvisor](http://ec2-52-17-39-186.eu-west-1.compute.amazonaws.com:8081/containers/)
+ - access key storage - ansible encryption
+ - access through proxy - talk about  “ssh -D”
 
 ---
 
-# SkyDNS
+# Adding a new service to the cluster “manually”
 
-Service:
-```bash
-docker run --rm --net=host -e SKYDNS_NAMESERVERS='172.31.0.2:53' 
-  -e SKYDNS_ADDR=$DOCKER_IP:53 -e ETCD_MACHINES='http://127.0.0.1:4001' 
-  --name %p skynetservices/skydns"
-```
-
-Sidekicks:
-```bash
-export HOST_IP=$(/usr/bin/ifconfig eth0 | sed -n '2 p' | awk '{print $2}' | cut -d':' -f2); \
-  export HOST_NAME=$(echo $HOSTNAME | cut -d '.' -f1); \
-  while true; do \
-    etcdctl set /skydns/local/skydns/cadvisor/$HOST_NAME 
-    \"{\\\"host\\\":\\\"$HOST_IP\\\",\\\"port\\\":8081}\" --ttl 60; \
-    sleep 45; \
-  done"
-```
+ - create a simple Dockerfile
+ - create a dockerhub build trigger????
+ - build and push to Dockerhub
+ - creating a service file
+ - deploy with fleetctl
 
 ---
 
-# Prometheus
+# Automating things
 
-[Prometheus](http://54.77.7.111:9090/)
+ - Deployer 
+   * adding service.yaml for deployment tool or fleetctl?
+   * demo new service deploying cluster
 
-```
-sum(rate(container_cpu_usage_seconds_total{name="cadvisor"}[2m]) * 100) by (name, instance)
-```
-
----
-
-# PromDash
-
-[PromDash](http://54.77.7.111:3000/test1)
+ - Auto created metrics
+   * see metrics for the new service in graphite + logs?
 
 ---
 
-# The big TODO
+# Taking down nodes and observing recovery?
 
- - Deployments (scheduler service)
- - docker image rebuilding
- - docker repo
- - VM scaling strategy
- - docs
- - unhacking things
- - "environments"
- - **actual** monitoring
- - training
- - migration
- - testing, lots of testing
- - ...
- - ..
- - .
+kill mongo master?
 
 ---
 
-# Links:
+# Building Docker images for current applications?
 
- - [CoreOS](https://coreos.com/)
- - [Fleet](https://github.com/coreos/fleet)
- - [etcd](https://github.com/coreos/etcd)
- - [Dockerfiles](http://docs.docker.com/reference/builder/)
- - [SystemD](http://freedesktop.org/wiki/Software/systemd/)
- - [JournalD](http://www.freedesktop.org/software/systemd/man/systemd-journald.service.html)
- - [vulcan](http://vulcand.io/)
- - [SkyDNS](https://github.com/miekg/skydns2)
- - [Cadvisor](https://github.com/google/cadvisor)
- - [Prometheus](http://prometheus.io/)
- - [PromDash](https://github.com/prometheus/promdash/)
+ - jenkins jobs http://ftapp09665-lviw-uk-p.osb.ft.com:8080/ 
+ - images on dockerhub?
+ - talk about versioning
 
     </textarea>
     <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
