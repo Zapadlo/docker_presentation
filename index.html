@@ -73,7 +73,10 @@ class: center, middle
  - show logging in cluster splunk
  - show logging on server
  - show accessing docker container
- - monitoring prometheus port XXXX
+ - monitoring prometheus port 9090
+ ```bash
+ sum(rate(container_cpu_usage_seconds_total{name="cadvisor"}[2m]) * 100) by (name, instance)
+ ```
  - graphing http://graphite.ft.com/
 
 ---
