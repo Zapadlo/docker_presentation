@@ -79,9 +79,18 @@ class: center, middle
  - show logging in cluster splunk
  - show logging on server
  - show accessing docker container
- - monitoring prometheus port 9090
+ - monitoring prometheus http://ip-172-31-20-111.eu-west-1.compute.internal:9090
  ```bash
- sum(rate(container_cpu_usage_seconds_total{name="cadvisor"}[2m]) * 100) by (name, instance)
+ #Vulcan CPU usage
+ sum(rate(container_cpu_usage_seconds_total{name="vulcan"}[2m]) * 100) by (name, instance)
+ #Vulcan memory
+ sum(container_memory_usage_bytes{name="vulcan"} / 1024 / 1024) by (name, instance)
+ #Memory all hosts
+ sum(container_memory_usage_bytes{name="/system.slice"} / 1024 / 1024)  by (name, instance)
+ #io all hosts
+ sum(container_fs_io_current) by (instance)
+ #top CPU apps
+ topk(3, sum(rate(container_cpu_usage_seconds_total{name !~ "/|/system.slice*"}[2m]) * 100) by (name, instance))
  ```
  - graphing http://graphite.ft.com/
 
@@ -90,7 +99,7 @@ class: center, middle
 # Security
 
  - access key storage - ansible encryption
- - access through proxy - talk about  “ssh -D”
+ - access through proxy - talk about `ssh -Nn -D 2323 core@52.17.249.52`
 
 ---
 
