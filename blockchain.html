@@ -28,7 +28,143 @@ class: center, middle
 # Intro
 
 George Angel
+
 Infrastructure Architect
+
+---
+
+# What is it?
+
+**Trusted distributed ledger**
+
+Current model:
+
+   ```
+   +---+       +---+       +---+
+   | A | <---> | B | <---> | C |
+   +---+       +---+       +---+
+   ```
+
+Unit: money, titles, deeds, music, art, scientific discoveries, intellectual property, and even votes
+
+---
+
+# What is it? (II)
+
+With blockchain:
+
+   ```
+   +---+       +---+
+   | A | <---> | C |
+   +---+       +---+
+   (bc)        (bc)
+   ```
+
+Unit: money, titles, deeds, music, art, scientific discoveries, intellectual property, and even votes
+
+---
+
+# Background
+
+ Bitcoin (digital asset and payment system)
+
+  - decentralised
+  - peer-to-peer
+  - verified public distributed ledger
+
+---
+
+# Components
+
+  - Units (bitcoin)
+  - Blockchain (public ledger) [distributed database]
+  - Ownership (private/public keys)
+  - transactions (transfer of ownership)
+  - proof of work (mining [solve difficult arithmetic problems, to create a cost of establishing consensus])
+  - hashing of blocks (immutability)
+
+---
+
+# Smart Contracts - after the bitcoin
+
+  - Units (bitcoin)
+  - Blockchain (public ledger) [distributed database]
+  - Ownership (private/public keys)
+  - **transactions (transfer of ownership [and more])**
+  - proof of work (mining [solve difficult arithmetic problems, to create a cost of establishing consensus])
+  - hashing of blocks (immutability)
+
+---
+
+# Smart Contracts (II)
+
+  * data (code of the contract)
+  * permissions (ownership of contract/asset)
+  * workflow (chain of contracts)
+  * trust transfer ?????
+
+---
+
+# Ethereum
+
+*Bitcoin 2.0*
+
+  - Built by the people who worked on bitcoin
+  - Uses smart contracts
+  - Platform currency: ether
+
+---
+
+# The Good Stuff
+
+  - no central control
+  - redundancy
+  - immutable
+  - secure
+  - visable
+  - pseudo-anonymous
+  - open source
+  - Two levels of trust:
+    * participants id
+    * transaction integrity
+
+---
+
+# Risks
+
+  - The DAO
+    * kickstarter in ethereum (my poor approximation)
+    * Raised 150Mil (the most successful crowfunding ever)
+    * 3.6 mil ether (~ $72 mil at the time of the hack) currently frozen
+
+    More info on the DAO hack: [link](https://medium.com/@pullnews/understanding-the-dao-hack-for-journalists-2312dd43e993#.90e7y8j6w)
+
+---
+
+# Limitations
+
+  - Size 
+    * current size of bitcoin blockchain: ~ 88 GB (https://bitinfocharts.com/) [2016-06-29]
+    * size of ethereum blockchain: 16 GB [2016-06-10]
+  - Fixes
+    * Side channel (another blockchain along side that gets "folded" into the main blockchain)
+    * Sharding (distribute the blockchain between the participants)
+
+---
+
+# Examples
+
+  * multichain (simple, a lot of people hack on it)
+  * ethereum (smart contract, popular in banking)
+  * Eris/Tendermint
+  * hyperledger - started by IBM, donated to Linux Foundation
+  * R3 Corda - over 50 banks + exchanges that a part of consirtium
+    - Wrote their own version from the ground up, the contracts are only held by the parties transacting
+  * BigChainDB [github](https://github.com/bigchaindb/bigchaindb)
+
+---
+
+# How can we use it?
 
     </textarea>
     <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
